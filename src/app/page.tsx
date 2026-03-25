@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AudioInput from "@/components/AudioInput";
 import ModelSelector from "@/components/ModelSelector";
 import ComparisonGrid from "@/components/ComparisonGrid";
@@ -10,7 +10,19 @@ import { saveHistoryEntry } from "@/lib/history";
 
 export default function Home() {
   const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [selectedModels, setSelectedModels] = useState<ModelId[]>(["gpt-4o-transcribe", "whisper-1"]);
+  const [selectedModels, setSelectedModels] = useState<ModelId[]>(() => {
+    if (typeof window === "undefined") return ["gpt-4o-transcribe", "whisper-1"];
+    try {
+      const saved = localStorage.getItem("stt-selected-models");
+      return saved ? JSON.parse(saved) : ["gpt-4o-transcribe", "whisper-1"];
+    } catch {
+      return ["gpt-4o-transcribe", "whisper-1"];
+    }
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem("stt-selected-models", JSON.stringify(selectedModels)); } catch {}
+  }, [selectedModels]);
   const [results, setResults] = useState<ModelResult[]>([]);
   const [loadingModels, setLoadingModels] = useState<ModelId[]>([]);
   const [historyKey, setHistoryKey] = useState(0);
